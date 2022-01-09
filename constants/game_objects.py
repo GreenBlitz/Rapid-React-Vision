@@ -1,4 +1,13 @@
+"""
+all game object go in this file
+for example:
+FUEL = gbv.GameObject(0.01)
+"""
 import gbvision as gbv
-# all game object go in this file
-# for example:
-# FUEL = gbv.GameObject(0.01)
+from math import pi
+
+# 136cm diameter hoop
+UPPER_HUB = gbv.GameObject((pi * 0.68 ** 2) ** 0.5)
+
+# 24cm diameter ball
+CARGO_BALL = gbv.GameObject((pi * 0.12 ** 2) ** 0.5)
