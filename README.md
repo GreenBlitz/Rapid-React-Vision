@@ -14,7 +14,7 @@ The targets for this year's competiton are as follows (there is more in-depth in
 
 - Red or blue (depending on our team)
 
-- Fuzzy material (hairs can cause rough edges)
+- Slightly discolored line across middle
 
 - 24cm diameter
   
