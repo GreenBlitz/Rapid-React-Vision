@@ -1,0 +1,18 @@
+# python binary files
+*.pyc
+__pycache__/
+
+# library info
+dist/
+*.egg-info/
+
+# editor files
+.idea/
+
+# virtual environment
+venv/
+
+# test videos
+*.avi
+
+logs/
