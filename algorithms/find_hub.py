@@ -27,7 +27,27 @@ class FindHub(BaseAlgorithm):
 
 	def _process(self, frame: gbv.Frame, camera: gbv.Camera) -> Union[
 		gbrpi.ConnEntryValue, Iterable[gbrpi.ConnEntryValue]]:
-		pass
+		# Get all the markers on the hoop
+		shapes = self.finder.find_shapes(frame)
+
+		# We have to be able to see at least 2 markers for the algorithm to work
+		# (Uses the calculation of a circle center by 2 points and a fixed radius)
+		if len(shapes) < 2:
+			raise self.AlgorithmIncomplete()
+
+		# Convert each shape to a location in 3D space.
+		real_locations = self.finder.locations_from_shapes(shapes, camera)
+
+		# We need to get the 2 closest markers, since they will be the most accurate
+		# I made this abstract function in case later we want to change it to
+		# finding the circle center with 3 points and no radius or something similar.
+		mins = self.__get_closest_locations(real_locations, 2)
+
+		# Get the hoop's center (X, Z)
+		center = self.__get_circle_center(mins[0], mins[1])
+
+		# Return with any Y value (the hoop is parallel to the ground plane, so all points have the same Y)
+		return center[0], mins[0][1], center[1]
 
 	def reset(self, camera: gbv.Camera, led_ring: LedRing):
 		camera.set_auto_exposure(False)
