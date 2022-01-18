@@ -49,12 +49,15 @@ class FindHub(BaseAlgorithm):
 		# Return with any Y value (the hoop is parallel to the ground plane, so all points have the same Y)
 		return center[0], mins[0][1], center[1]
 
-	def reset(self, camera: gbv.Camera, led_ring: LedRing):
+	def reset(self, camera: gbv.Camera, led_ring: LedRing) -> None:
+		"""
+		Reset the camera. Also runs on initiation.
+		"""
 		camera.set_auto_exposure(False)
 		camera.set_exposure(LOW_EXPOSURE)
 		led_ring.on()
 
-	# noinspection PyMethodMayBeStatic
+	# noinspection PyMethodMayBeStatic,DuplicatedCode
 	def __get_both_centers(self, x1_: float, y1_: float, x2_: float, y2_: float, radius_: float) -> Tuple[
 		Tuple[Number, Number], Tuple[Number, Number]]:
 		"""
@@ -114,7 +117,7 @@ class FindHub(BaseAlgorithm):
 		return cents[0] if distance(cents[0][0], cents[0][1]) > distance(cents[1][0], cents[1][1]) else cents[1]
 
 	# noinspection PySameParameterValue,PyMethodMayBeStatic
-	def __get_closest_locations(self, locations, count: int):
+	def __get_closest_locations(self, locations, count: int) -> List[Location]:
 		"""
 		Gets the closest locations out of a list of locations.
 
@@ -123,7 +126,7 @@ class FindHub(BaseAlgorithm):
 		:return:
 		"""
 		# List of points
-		minimums: List[gbv.Location] = []
+		minimums: List[Location] = []
 
 		# Convert to a dict like so: {distance: location_object}
 		distance_to_point: Dict[float, Location] = {}
