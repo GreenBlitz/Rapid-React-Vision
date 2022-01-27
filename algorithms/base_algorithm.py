@@ -14,7 +14,7 @@ class BaseAlgorithm(abc.ABC):
     this is the name of the algorithm, for every algorithm this must be a unique value different from 0
     the network table will tell you which algorithm they currently want to run by using this program
     """
-    DEBUG = True
+    DEBUG = False
     """
     indicates if the program is being run in debug mode
     not in use by the base program, but should be used by algorithms in order to print extra data in debug mode
