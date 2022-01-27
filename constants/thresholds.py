@@ -5,4 +5,4 @@ VISION_TARGET_THRESHOLD = gbv.ColorThreshold([[0, 50], [100, 255], [0, 50]], gbv
 """
 import gbvision as gbv
 
-UPPER_HUB_THRESHOLD = gbv.ColorThreshold([[55, 75], [255, 256], [50, 150]], 'HSV') + gbv.ErodeAndDilate(4)
+REFLECTOR_THRESHOLD = gbv.ColorThreshold([[55, 80], [200, 255], [70, 200]], 'HSV') + gbv.ErodeAndDilate(2)
