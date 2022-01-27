@@ -2,14 +2,14 @@
 Algorithm to locate the upper hub of the 2 hubs in the center of the map.
 """
 from gbvision import Location, Number
-from typing import Union, Iterable, Tuple, Dict, List
+from typing import Union, Iterable, Tuple, Dict, List, Optional
 
 import gbrpi
 import gbvision as gbv
 from math import hypot as distance, sqrt
 
 from algorithms import BaseAlgorithm
-from constants import LOW_EXPOSURE, UPPER_HUB, CONTOUR_MIN_AREA, UPPER_HUB_THRESHOLD, UPPER_HUB_RADIUS
+from constants import LOW_EXPOSURE, REFLECTOR_TAPE, CONTOUR_MIN_AREA, REFLECTOR_THRESHOLD, UPPER_HUB_RADIUS
 from vision_master import LedRing
 
 
@@ -22,8 +22,11 @@ class FindHub(BaseAlgorithm):
 
 	def __init__(self, output_key, success_key, conn, log_algorithm_incomplete=False):
 		BaseAlgorithm.__init__(self, output_key, success_key, conn, log_algorithm_incomplete)
-		self.finder = gbv.CircleFinder(game_object=UPPER_HUB, threshold_func=UPPER_HUB_THRESHOLD,
-		                               contour_min_area=CONTOUR_MIN_AREA)
+		self.finder = gbv.RectFinder(
+			game_object=REFLECTOR_TAPE,
+			threshold_func=REFLECTOR_THRESHOLD,
+			contour_min_area=CONTOUR_MIN_AREA
+		)
 
 	def _process(self, frame: gbv.Frame, camera: gbv.Camera) -> Union[
 		gbrpi.ConnEntryValue, Iterable[gbrpi.ConnEntryValue]]:
@@ -46,8 +49,13 @@ class FindHub(BaseAlgorithm):
 		# Get the hoop's center (X, Z)
 		center = self.__get_circle_center(mins[0], mins[1])
 
-		# Return with any Y value (the hoop is parallel to the ground plane, so all points have the same Y)
-		return center[0], mins[0][1], center[1]
+		# If the center was found
+		if center:
+			# Return with any Y value (the hoop is parallel to the ground plane, so all points have the same Y)
+			print(center[0], mins[0][1], center[1])
+			return center[0], mins[0][1], center[1]
+		else:
+			return 0
 
 	def reset(self, camera: gbv.Camera, led_ring: LedRing) -> None:
 		"""
@@ -58,8 +66,8 @@ class FindHub(BaseAlgorithm):
 		led_ring.on()
 
 	# noinspection PyMethodMayBeStatic,DuplicatedCode
-	def __get_both_centers(self, x1_: float, y1_: float, x2_: float, y2_: float, radius_: float) -> Tuple[
-		Tuple[Number, Number], Tuple[Number, Number]]:
+	def __get_both_centers(self, x1_: float, y1_: float, x2_: float, y2_: float, radius_: float) -> \
+		Optional[Tuple[Tuple[Number, Number], Tuple[Number, Number]]]:
 		"""
 		~ Three poor kids spent a few hours
 		~ trying to solve, but to no arousal
@@ -74,11 +82,17 @@ class FindHub(BaseAlgorithm):
 
 		TLDR: A lot of math.
 		See: https://stackoverflow.com/q/36211171/11985743
-		:return Both possible center points, ((X_1, Z_1), (X_2, Z_2))
+		:return If it finds both possible center points, then it returns ((X_1, Z_1), (X_2, Z_2)).
+				Otherwise, returns None.
 		"""
 		radsq = radius_ ** 2
 
 		a = sqrt((x2_ - x1_) ** 2 + (y2_ - y1_) ** 2)
+
+		if radsq - (a / 2) ** 2 < 0:
+			print(f"Something went wrong: {radsq - (a / 2) ** 2}")
+			return
+
 		b = sqrt(radsq - (a / 2) ** 2)
 
 		ba_ratio = b / a
@@ -96,13 +110,16 @@ class FindHub(BaseAlgorithm):
 		        (x3 + bay_delta,
 		         y3 - bax_delta))
 
-	def __get_circle_center(self, point1: Location, point2: Location) -> Tuple[gbv.Number, gbv.Number]:
+	def __get_circle_center(self, point1: Location, point2: Location) -> Optional[Tuple[gbv.Number, gbv.Number]]:
 		"""
 		Takes 2 points and calculates the center of the circle (x, z)
 		that lies on them, given a fixed radius.
 		"""
 		# Get the centers
 		cents = self.__get_both_centers(point1[0], point1[2], point2[0], point2[2], UPPER_HUB_RADIUS)
+		# If it did not find both centers (camera bugs)
+		if not cents:
+			return
 		# Return the center that is farther away
 		# If '#' is hoop, '*' is markers, 'o' are possible centers, and '<' is camera.
 		#           # # #
