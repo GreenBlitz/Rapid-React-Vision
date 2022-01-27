@@ -55,7 +55,7 @@ class FindHub(BaseAlgorithm):
 			print(center[0], mins[0][1], center[1])
 			return center[0], mins[0][1], center[1]
 		else:
-			return 0
+			raise self.AlgorithmIncomplete()
 
 	def reset(self, camera: gbv.Camera, led_ring: LedRing) -> None:
 		"""
@@ -152,6 +152,9 @@ class FindHub(BaseAlgorithm):
 		for loc in locations:
 			# Get the distance and add it to the dict
 			distance_to_point[gbv.plane_distance_from_object(loc)] = loc
+
+		if not distance_to_point:
+			raise self.AlgorithmIncomplete()
 
 		# For the amount of minimums to find
 		for i in range(count):

@@ -106,7 +106,7 @@ def main():
                         frame=frame,
                         rects=shapes,
                         color=(255, 0, 0),
-                        thickness=2
+                        thickness=1
                     )
                 )
 
