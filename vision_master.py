@@ -68,7 +68,7 @@ def main():
 
     window = False
     thresh_window = False
-    if not BaseAlgorithm.DEBUG:
+    if not BaseAlgorithm.DEBUG and not is_on_rpi():
         # Window setup
         window = gbv.FeedWindow('Vision')
         # Run the window
@@ -96,15 +96,15 @@ def main():
             algo = possible_algos[algo_type]
             algo(frame, camera)
 
-            if not BaseAlgorithm.DEBUG and window:
+            if not BaseAlgorithm.DEBUG and window and not is_on_rpi():
                 window.show_frame(frame)
-            if not BaseAlgorithm.DEBUG and thresh_window:
+            if not BaseAlgorithm.DEBUG and thresh_window and not is_on_rpi():
                 # noinspection PyUnresolvedReferences
                 shapes = algo.finder.find_shapes(frame)
                 thresh_window.show_frame(
-                    gbv.draw_rects(
+                    gbv.draw_rotated_rects(
                         frame=frame,
-                        rects=shapes,
+                        rotated_rects=shapes,
                         color=(255, 0, 0),
                         thickness=1
                     )
