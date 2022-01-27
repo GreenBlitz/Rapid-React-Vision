@@ -52,7 +52,12 @@ class FindHub(BaseAlgorithm):
 		# If the center was found
 		if center:
 			# Return with any Y value (the hoop is parallel to the ground plane, so all points have the same Y)
-			print(center[0], mins[0][1], center[1])
+			precision = 3
+			print("\t".join([
+				"X: " + str(round(center[0], precision)),
+				"Y: " + str(round(mins[0][1], precision)),
+				"Z: " + str(round(center[1], precision))
+			]))
 			return center[0], mins[0][1], center[1]
 		else:
 			raise self.AlgorithmIncomplete()
