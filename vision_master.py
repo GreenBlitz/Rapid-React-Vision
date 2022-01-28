@@ -80,11 +80,15 @@ def main():
 
     while True:
         ok, frame = camera.read()
-        if BaseAlgorithm.DEBUG:
-            algo_type = conn.get('algorithm')
-            logger.info(f'algo recieved: {algo_type}')
-        else:
-            algo_type = "hub"
+        # if not is_on_rpi():
+        #     algo_type = conn.get('algorithm')
+        #     logger.info(f'algo recieved: {algo_type}')
+        # else:
+        # THIS SHOULD TAKE THE CURRENT ALGORITHM FROM THE NETWORK TABLE
+        # (RoboRio chooses an algorithm to use, then waits for result)
+        # In the meantime, hardcode only the hub algorithm
+        # Since we can't set up the network table atm and we might just make a new lib for it.
+        algo_type = "hub"
 
         if algo_type is not None:
             if algo_type not in possible_algos:
