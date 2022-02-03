@@ -33,10 +33,15 @@ LedRing = gbrpi.LedRing if is_on_rpi() else __EmptyLedRing
 
 # noinspection PyMissingOrEmptyDocstring
 def main():
+    # Init gb logger
     logger = GBLogger(LOGGER_NAME, use_file=True)
     logger.allow_debug = BaseAlgorithm.DEBUG
+
+    # START THE CONNECTION. CHANGE THIS TO UART (NETWORK TABLE SUXXXXXX!!)
     conn = gbrpi.TableConn(ip=TABLE_IP, table_name=TABLE_NAME)
     logger.info('initialized conn')
+
+    # Camera and light data
     led_ring = LedRing(LED_RING_PORT)
     data = gbv.LIFECAM_3000.rotate_pitch(PITCH_ANGLE). \
         rotate_yaw(YAW_ANGLE). \
@@ -44,6 +49,7 @@ def main():
         move_x(X_OFFSET). \
         move_y(Y_OFFSET). \
         move_z(Z_OFFSET)
+
     if BaseAlgorithm.DEBUG:
         logger.info('running on debug mode, waiting for a stream receiver to connect...')
         camera = gbv.USBStreamCamera(gbv.TCPStreamBroadcaster(TCP_STREAM_PORT), CAMERA_PORT, data=data)
@@ -52,20 +58,23 @@ def main():
     else:
         logger.info('running off debug mode...')
         camera = gbv.USBCamera(CAMERA_PORT, data=data)
+
+    # Initialize camera settings
     camera.set_auto_exposure(False)
-    # camera.rescale(0.5)
+    # camera.rescale(0.5)  # Makes camera frame smaller, if it's being slow or something
     logger.info('initialized camera')
 
+    # Get the algorithms
     all_algos = BaseAlgorithm.get_algorithms()
-
     logger.debug(f'Algorithms: {", ".join(all_algos)}')
-
     possible_algos: Dict[str, BaseAlgorithm] = {
-        key: all_algos[key](OUTPUT_KEY, SUCCESS_KEY, conn, LOG_ALGORITHM_INCOMPLETE) for key in all_algos}
+        key: all_algos[key](OUTPUT_KEY, SUCCESS_KEY, conn, LOG_ALGORITHM_INCOMPLETE) \
+        for key in all_algos
+    }
     current_algo = None
 
-    logger.info('starting...')
-
+    # Debugging window
+    logger.info('starting debug window if enabled...')
     window = False
     thresh_window = False
     if not BaseAlgorithm.DEBUG and not is_on_rpi():
@@ -78,6 +87,7 @@ def main():
         # Run
         thresh_window.open()
 
+    logger.info('starting rpi...')
     while True:
         ok, frame = camera.read()
         # if not is_on_rpi():
@@ -88,6 +98,7 @@ def main():
         # (RoboRio chooses an algorithm to use, then waits for result)
         # In the meantime, hardcode only the hub algorithm
         # Since we can't set up the network table atm and we might just make a new lib for it.
+        # UPDATE: There is an old UART class we will try to use instead for networking
         algo_type = "hub"
 
         if algo_type is not None:
