@@ -8,7 +8,7 @@ from typing import Dict
 from algorithms import BaseAlgorithm
 from constants import CAMERA_PORT, TCP_STREAM_PORT, LED_RING_PORT
 from constants import PITCH_ANGLE, YAW_ANGLE, ROLL_ANGLE, X_OFFSET, Y_OFFSET, Z_OFFSET
-from constants import TABLE_IP, TABLE_NAME, OUTPUT_KEY, SUCCESS_KEY
+from constants import DEV_PORT
 from tools import is_on_rpi
 from utils import GBLogger
 
@@ -38,8 +38,12 @@ def main():
     logger.allow_debug = BaseAlgorithm.DEBUG
 
     # START THE CONNECTION. CHANGE THIS TO UART (NETWORK TABLE SUXXXXXX!!)
-    conn = gbrpi.TableConn(ip=TABLE_IP, table_name=TABLE_NAME)
+    conn = gbrpi.UART(DEV_PORT, ["hub"], 3)
     logger.info('initialized conn')
+
+    logger.info('starting conn')
+    conn.start_handler_thread()
+    logger.info('started conn')
 
     # Camera and light data
     led_ring = LedRing(LED_RING_PORT)
@@ -68,8 +72,7 @@ def main():
     all_algos = BaseAlgorithm.get_algorithms()
     logger.debug(f'Algorithms: {", ".join(all_algos)}')
     possible_algos: Dict[str, BaseAlgorithm] = {
-        key: all_algos[key](OUTPUT_KEY, SUCCESS_KEY, conn, LOG_ALGORITHM_INCOMPLETE) \
-        for key in all_algos
+        key: all_algos[key](conn, LOG_ALGORITHM_INCOMPLETE) for key in all_algos
     }
     current_algo = None
 
