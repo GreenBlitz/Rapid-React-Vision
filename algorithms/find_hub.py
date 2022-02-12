@@ -20,8 +20,8 @@ class FindHub(BaseAlgorithm):
 	"""
 	algorithm_name = 'hub'
 
-	def __init__(self, output_key, success_key, conn, log_algorithm_incomplete=False):
-		BaseAlgorithm.__init__(self, output_key, success_key, conn, log_algorithm_incomplete)
+	def __init__(self, conn, log_algorithm_incomplete=False):
+		BaseAlgorithm.__init__(self, conn, log_algorithm_incomplete)
 		self.finder = gbv.RotatedRectFinder(
 			game_object=REFLECTOR_TAPE,
 			threshold_func=REFLECTOR_THRESHOLD,
