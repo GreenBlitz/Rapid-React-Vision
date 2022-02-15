@@ -38,7 +38,7 @@ def main():
     logger.allow_debug = BaseAlgorithm.DEBUG
 
     # START THE CONNECTION. CHANGE THIS TO UART (NETWORK TABLE SUXXXXXX!!)
-    conn = gbrpi.UART(DEV_PORT, ["hub"], 3)
+    conn = gbrpi.UART(DEV_PORT, ["hub"])
     logger.info('initialized conn')
 
     logger.info('starting conn')
