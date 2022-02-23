@@ -1,6 +1,8 @@
 """
 all ports constants go in this file
 """
+from typing import Dict
+
 from tools import is_on_rpi
 
 import subprocess as sp
@@ -8,17 +10,19 @@ import glob
 import re
 
 __is_on_rpi = is_on_rpi()
-CAMERA_PORT = 1
+DEV_CAMERA_PORT = 1
+LED_RING_PORT = 18
 INTERFACE_TO_LOC = {
     "03000002": "FRONT",
     "03000005": "BACK",
     "???": "SHOOTER"
 }
 
+# Compile the regex once, this is a slightly costly operation
 INTERFACE_REGEX = re.compile(r"Interface Info:\n\tID\s+: 0x(\d+)", re.M)
 
 
-def generate_camera_ports():
+def generate_camera_ports() -> Dict[str, int]:
     """
     Maps the hardware ports to virtual ports.
 
@@ -27,10 +31,16 @@ def generate_camera_ports():
 
     :return: A dictionary of matching names of some form
             (for example, "FRONT_CAMERA") to their mapped
-            stream port/file (such as /dev/video1).
+            stream port (such as 1, to symbolize /dev/video1).
     """
+    # First check that this is not debug mode (not on the RPI, on a developer's computer)
+    # If we are on a Dev's PC
+    if not __is_on_rpi:
+        # Return a map where all the names point to the default camera port
+        return {map_name: DEV_CAMERA_PORT for map_name in list(INTERFACE_TO_LOC.keys())}
+
     # Init the dictionary to return
-    final_dict = {}
+    final_dict: Dict[str, int] = {}
     # Get all the files in /dev/ which are called video* ('video' with any text after it)
     ports = glob.glob("/dev/video*")
     # For each file found (stream)
@@ -49,7 +59,7 @@ def generate_camera_ports():
             # If this ID is a valid camera ID
             if interface_id in list(INTERFACE_TO_LOC.keys()):
                 # Map our temporary name to the virtual port
-                # For example, {FRONT_CAMERA : /dev/video1}
+                # For example, {FRONT_CAMERA : 1} (to symbolize /dev/video1)
                 # What this means is that in the end, we have a dictionary where
                 # we know exactly which camera points to what file stream.
                 final_dict[INTERFACE_TO_LOC[interface_id]] = int(port[10:])
@@ -57,5 +67,3 @@ def generate_camera_ports():
             print(f"Popen failed with error: {e}")
     # Return the output dictionary
     return final_dict
-
-LED_RING_PORT = 18
