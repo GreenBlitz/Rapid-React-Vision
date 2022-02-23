@@ -61,7 +61,11 @@ def main():
     # Check my algorithm debug mode
     if BaseAlgorithm.DEBUG:
         logger.info('running on debug mode, waiting for a stream receiver to connect...')
-        front_camera = gbv.USBStreamCamera(gbv.TCPStreamBroadcaster(TCP_STREAM_PORT), camera, data=data)
+        stream = gbv.TCPStreamBroadcaster(
+            port=TCP_STREAM_PORT,
+            max_fps=5
+        )
+        front_camera = gbv.USBStreamCamera(stream, camera, data=data)
         logger.info('initialized stream')
         front_camera.toggle_stream(True)
     else:
