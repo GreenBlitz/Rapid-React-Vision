@@ -6,9 +6,10 @@ import gbvision as gbv
 from typing import Dict
 
 from algorithms import BaseAlgorithm
-from constants import CAMERA_PORT, TCP_STREAM_PORT, LED_RING_PORT
 from constants import PITCH_ANGLE, YAW_ANGLE, ROLL_ANGLE, X_OFFSET, Y_OFFSET, Z_OFFSET
-from constants import TABLE_IP, TABLE_NAME, OUTPUT_KEY, SUCCESS_KEY
+from constants import TCP_STREAM_PORT, LED_RING_PORT
+from constants import generate_camera_ports
+from constants import DEV_PORT
 from tools import is_on_rpi
 from utils import GBLogger
 
@@ -18,6 +19,7 @@ LOG_ALGORITHM_INCOMPLETE = False
 
 # noinspection PyMissingOrEmptyDocstring,PyUnusedFunction
 class __EmptyLedRing:
+    # noinspection PyUnusedLocal
     def __init__(self, port):
         pass
 
@@ -38,8 +40,12 @@ def main():
     logger.allow_debug = BaseAlgorithm.DEBUG
 
     # START THE CONNECTION. CHANGE THIS TO UART (NETWORK TABLE SUXXXXXX!!)
-    conn = gbrpi.TableConn(ip=TABLE_IP, table_name=TABLE_NAME)
+    conn = gbrpi.UART(DEV_PORT, ["hub"])
     logger.info('initialized conn')
+
+    logger.info('starting conn')
+    conn.start_handler_thread()
+    logger.info('started conn')
 
     # Camera and light data
     led_ring = LedRing(LED_RING_PORT)
@@ -50,26 +56,29 @@ def main():
         move_y(Y_OFFSET). \
         move_z(Z_OFFSET)
 
+    # Get the camera ports (mapped out by hardware ports)
+    camera = generate_camera_ports()["FRONT"]
+    # Check my algorithm debug mode
     if BaseAlgorithm.DEBUG:
         logger.info('running on debug mode, waiting for a stream receiver to connect...')
-        camera = gbv.USBStreamCamera(gbv.TCPStreamBroadcaster(TCP_STREAM_PORT), CAMERA_PORT, data=data)
+        front_camera = gbv.USBStreamCamera(gbv.TCPStreamBroadcaster(TCP_STREAM_PORT), camera, data=data)
         logger.info('initialized stream')
-        camera.toggle_stream(True)
+        front_camera.toggle_stream(True)
     else:
         logger.info('running off debug mode...')
-        camera = gbv.USBCamera(CAMERA_PORT, data=data)
+        front_camera = gbv.USBCamera(camera, data=data)
+        front_camera.read()
 
-    # Initialize camera settings
-    camera.set_auto_exposure(False)
-    # camera.rescale(0.5)  # Makes camera frame smaller, if it's being slow or something
-    logger.info('initialized camera')
+    # Initialize front_camera settings
+    front_camera.set_auto_exposure(False)
+    # front_camera.rescale(0.5)  # Makes front_camera frame smaller, if it's being slow or something
+    logger.info('initialized front_camera')
 
     # Get the algorithms
     all_algos = BaseAlgorithm.get_algorithms()
     logger.debug(f'Algorithms: {", ".join(all_algos)}')
     possible_algos: Dict[str, BaseAlgorithm] = {
-        key: all_algos[key](OUTPUT_KEY, SUCCESS_KEY, conn, LOG_ALGORITHM_INCOMPLETE) \
-        for key in all_algos
+        key: all_algos[key](conn, LOG_ALGORITHM_INCOMPLETE) for key in all_algos
     }
     current_algo = None
 
@@ -89,7 +98,7 @@ def main():
 
     logger.info('starting rpi...')
     while True:
-        ok, frame = camera.read()
+        ok, frame = front_camera.read()
         # if not is_on_rpi():
         #     algo_type = conn.get('algorithm')
         #     logger.info(f'algo recieved: {algo_type}')
@@ -106,10 +115,10 @@ def main():
                 logger.warning(f'Unknown algorithm type: {algo_type}')
             if algo_type != current_algo:
                 logger.debug(f'switched to algorithm: {algo_type}')
-                possible_algos[algo_type].reset(camera, led_ring)
+                possible_algos[algo_type].reset(front_camera, led_ring)
 
             algo = possible_algos[algo_type]
-            algo(frame, camera)
+            algo(frame, front_camera)
 
             if not BaseAlgorithm.DEBUG and window and not is_on_rpi():
                 window.show_frame(frame)

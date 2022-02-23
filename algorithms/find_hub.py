@@ -1,6 +1,8 @@
 """
 Algorithm to locate the upper hub of the 2 hubs in the center of the map.
 """
+from random import randrange
+
 from gbvision import Location, Number
 from typing import Union, Iterable, Tuple, Dict, List, Optional
 
@@ -20,8 +22,8 @@ class FindHub(BaseAlgorithm):
 	"""
 	algorithm_name = 'hub'
 
-	def __init__(self, output_key, success_key, conn, log_algorithm_incomplete=False):
-		BaseAlgorithm.__init__(self, output_key, success_key, conn, log_algorithm_incomplete)
+	def __init__(self, conn, log_algorithm_incomplete=False):
+		BaseAlgorithm.__init__(self, conn, log_algorithm_incomplete)
 		self.finder = gbv.RotatedRectFinder(
 			game_object=REFLECTOR_TAPE,
 			threshold_func=REFLECTOR_THRESHOLD,
@@ -30,6 +32,16 @@ class FindHub(BaseAlgorithm):
 
 	def _process(self, frame: gbv.Frame, camera: gbv.Camera) -> Union[
 		gbrpi.ConnEntryValue, Iterable[gbrpi.ConnEntryValue]]:
+
+		# # DEBUG CODE ===========================================
+		# precision = 3
+		# print("\t".join([
+		# 	"X: " + str(round(1.2, precision)),
+		# 	"Y: " + str(round(3.4, precision)),
+		# 	"Z: " + str(round(5.6, precision))
+		# ]))
+		# return [randrange(1, 5) + 0.1, randrange(1, 5) + 0.2, randrange(1, 5) + 0.3]
+
 		# Get all the markers on the hoop
 		shapes = self.finder.find_shapes(frame)
 
@@ -58,7 +70,7 @@ class FindHub(BaseAlgorithm):
 				"Y: " + str(round(mins[0][1], precision)),
 				"Z: " + str(round(center[1], precision))
 			]))
-			return center[0], mins[0][1], center[1]
+			return [center[0], mins[0][1], center[1]]
 		else:
 			raise self.AlgorithmIncomplete()
 
