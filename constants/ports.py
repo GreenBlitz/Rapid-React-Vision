@@ -1,4 +1,6 @@
-# all ports constants go in this file
+"""
+all ports constants go in this file
+"""
 from tools import is_on_rpi
 
 import subprocess as sp
@@ -13,10 +15,20 @@ INTERFACE_TO_LOC = {
     "???": "SHOOTER"
 }
 
-INTERFACE_REGEX = re.compile("Interface Info:\n\tID\s+: 0x(\d+)", re.M)
+INTERFACE_REGEX = re.compile(r"Interface Info:\n\tID\s+: 0x(\d+)", re.M)
 
 
 def generate_camera_ports():
+    """
+    Maps the hardware ports to virtual ports.
+
+    For example the first USB slot goes
+    to /dev/video1, the second USB slot maps to /dev/video4...
+
+    :return: A dictionary of matching names of some form
+            (for example, "FRONT_CAMERA") to their mapped
+            stream port/file (such as /dev/video1).
+    """
     # Init the dictionary to return
     final_dict = {}
     # Get all the files in /dev/ which are called video* ('video' with any text after it)
