@@ -9,7 +9,6 @@ import subprocess as sp
 import glob
 import re
 
-__is_on_rpi = is_on_rpi()
 DEV_CAMERA_PORT = 1
 LED_RING_PORT = 18
 INTERFACE_TO_LOC = {
@@ -22,6 +21,7 @@ INTERFACE_TO_LOC = {
 INTERFACE_REGEX = re.compile(r"Interface Info:\n\tID\s+: 0x(\d+)", re.M)
 
 
+# Only run this once, Python will remember it for next time we call
 def generate_camera_ports() -> Dict[str, int]:
     """
     Maps the hardware ports to virtual ports.
@@ -35,7 +35,7 @@ def generate_camera_ports() -> Dict[str, int]:
     """
     # First check that this is not debug mode (not on the RPI, on a developer's computer)
     # If we are on a Dev's PC
-    if not __is_on_rpi:
+    if not is_on_rpi():
         # Return a map where all the names point to the default camera port
         return {map_name: DEV_CAMERA_PORT for map_name in list(INTERFACE_TO_LOC.keys())}
 

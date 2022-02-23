@@ -6,10 +6,10 @@ import gbvision as gbv
 from typing import Dict
 
 from algorithms import BaseAlgorithm
-from constants import CAMERA_PORT, TCP_STREAM_PORT, LED_RING_PORT
-from constants import generate_camera_ports
 from constants import PITCH_ANGLE, YAW_ANGLE, ROLL_ANGLE, X_OFFSET, Y_OFFSET, Z_OFFSET
 from constants import TABLE_IP, TABLE_NAME, OUTPUT_KEY, SUCCESS_KEY
+from constants import TCP_STREAM_PORT, LED_RING_PORT
+from constants import generate_camera_ports
 from tools import is_on_rpi
 from utils import GBLogger
 
@@ -19,6 +19,7 @@ LOG_ALGORITHM_INCOMPLETE = False
 
 # noinspection PyMissingOrEmptyDocstring,PyUnusedFunction
 class __EmptyLedRing:
+    # noinspection PyUnusedLocal
     def __init__(self, port):
         pass
 
@@ -50,19 +51,18 @@ def main():
         move_x(X_OFFSET). \
         move_y(Y_OFFSET). \
         move_z(Z_OFFSET)
-    if is_on_rpi():
-        loc_to_port = generate_camera_ports()
-        front_camera_port = loc_to_port["FRONT"]
-    else:
-        front_camera_port = CAMERA_PORT
+
+    # Get the camera ports (mapped out by hardware ports)
+    camera = generate_camera_ports()["FRONT"]
+    # Check my algorithm debug mode
     if BaseAlgorithm.DEBUG:
         logger.info('running on debug mode, waiting for a stream receiver to connect...')
-        front_camera = gbv.USBStreamCamera(gbv.TCPStreamBroadcaster(TCP_STREAM_PORT), front_camera_port, data=data)
+        front_camera = gbv.USBStreamCamera(gbv.TCPStreamBroadcaster(TCP_STREAM_PORT), camera, data=data)
         logger.info('initialized stream')
         front_camera.toggle_stream(True)
     else:
         logger.info('running off debug mode...')
-        front_camera = gbv.USBCamera(front_camera_port, data=data)
+        front_camera = gbv.USBCamera(camera, data=data)
         front_camera.read()
 
     # Initialize front_camera settings
