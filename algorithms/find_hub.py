@@ -1,7 +1,6 @@
 """
 Algorithm to locate the upper hub of the 2 hubs in the center of the map.
 """
-from random import randrange
 
 from gbvision import Location, Number
 from typing import Union, Iterable, Tuple, Dict, List, Optional
@@ -34,6 +33,7 @@ class FindHub(BaseAlgorithm):
 		gbrpi.ConnEntryValue, Iterable[gbrpi.ConnEntryValue]]:
 
 		# # DEBUG CODE ===========================================
+		# from random import randrange
 		# precision = 3
 		# print("\t".join([
 		# 	"X: " + str(round(1.2, precision)),
