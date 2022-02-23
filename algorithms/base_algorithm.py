@@ -1,13 +1,18 @@
+"""
+Base algorithm file.
+"""
 import abc
-from typing import Union, List, Iterable, Dict, Type
-
-import gbvision as gbv
 import gbrpi
+import gbvision as gbv
+from typing import Iterable, Dict, Type
 
 from utils.gblogger import GBLogger
 
 
 class BaseAlgorithm(abc.ABC):
+    """
+    Base algorithm.
+    """
     __registered = {}
     algorithm_name = None
     """
@@ -37,32 +42,26 @@ class BaseAlgorithm(abc.ABC):
                 f'duplicated entry for algorithm_name {cls.algorithm_name}: {other_cls.__name__} and {cls.__name__}')
         BaseAlgorithm.__registered[cls.algorithm_name] = cls
 
-    def __init__(self, output_key: Union[str, List[str]], success_key: str, conn: gbrpi.TableConn,
-                 log_algorithm_incomplete=False):
-        self.output_key = output_key
-        self.success_key = success_key
+    def __init__(self, conn: gbrpi.UART, log_algorithm_incomplete=False):
         self.conn = conn
         self.log_algorithm_incomplete = log_algorithm_incomplete
         self.logger = GBLogger(self.algorithm_name, use_file=self.USE_FILE)
         self.logger.allow_debug = self.DEBUG
 
     def __call__(self, frame: gbv.Frame, camera: gbv.Camera):
+        # Holy cow... no comments anywhere... who made this template
         try:
-            values = self._process(frame, camera)
-            if type(self.output_key) is str:
-                self.conn.set(self.output_key, values)
-            else:
-                for i, value in enumerate(values):
-                    self.conn.set(self.output_key[i], value)
-            self.conn.set(self.success_key, True)
+            # Process this frame
+            # We will send this to the RoboRIO
+            self.conn.update_data(self._process(frame, camera))
         except self.AlgorithmIncomplete as e:
-            self.conn.set(self.success_key, False)
+            # If something failed
+            self.conn.send_fail()
             if self.log_algorithm_incomplete:
                 self.logger.warning(repr(e))
 
     @abc.abstractmethod
-    def _process(self, frame: gbv.Frame, camera: gbv.Camera) -> Union[
-            gbrpi.ConnEntryValue, Iterable[gbrpi.ConnEntryValue]]:
+    def _process(self, frame: gbv.Frame, camera: gbv.Camera) -> Iterable[gbrpi.ConnEntryValue]:
         """
         processes the frame and returns the result to be placed
 
@@ -83,4 +82,7 @@ class BaseAlgorithm(abc.ABC):
 
     @classmethod
     def get_algorithms(cls) -> Dict[str, Type['BaseAlgorithm']]:
+        """
+        Return our registered algorithms.
+        """
         return cls.__registered.copy()
