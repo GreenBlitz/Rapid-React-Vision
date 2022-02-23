@@ -52,13 +52,8 @@ class BaseAlgorithm(abc.ABC):
         # Holy cow... no comments anywhere... who made this template
         try:
             # Process this frame
-            values = self._process(frame, camera)
-            # For each value returned from the function
-            for value in values:
-                # We will send this to the RoboRIO
-                self.conn.latest_data = value
-            # And send a success message
-            self.conn.send_fail()
+            # We will send this to the RoboRIO
+            self.conn.update_data(self._process(frame, camera))
         except self.AlgorithmIncomplete as e:
             # If something failed
             self.conn.send_fail()
