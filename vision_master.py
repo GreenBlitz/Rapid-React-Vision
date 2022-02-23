@@ -7,6 +7,7 @@ from typing import Dict
 
 from algorithms import BaseAlgorithm
 from constants import CAMERA_PORT, TCP_STREAM_PORT, LED_RING_PORT
+from constants import generate_camera_ports
 from constants import PITCH_ANGLE, YAW_ANGLE, ROLL_ANGLE, X_OFFSET, Y_OFFSET, Z_OFFSET
 from constants import TABLE_IP, TABLE_NAME, OUTPUT_KEY, SUCCESS_KEY
 from tools import is_on_rpi
@@ -49,20 +50,25 @@ def main():
         move_x(X_OFFSET). \
         move_y(Y_OFFSET). \
         move_z(Z_OFFSET)
-
+    if is_on_rpi():
+        loc_to_port = generate_camera_ports()
+        front_camera_port = loc_to_port["FRONT"]
+    else:
+        front_camera_port = CAMERA_PORT
     if BaseAlgorithm.DEBUG:
         logger.info('running on debug mode, waiting for a stream receiver to connect...')
-        camera = gbv.USBStreamCamera(gbv.TCPStreamBroadcaster(TCP_STREAM_PORT), CAMERA_PORT, data=data)
+        front_camera = gbv.USBStreamCamera(gbv.TCPStreamBroadcaster(TCP_STREAM_PORT), front_camera_port, data=data)
         logger.info('initialized stream')
-        camera.toggle_stream(True)
+        front_camera.toggle_stream(True)
     else:
         logger.info('running off debug mode...')
-        camera = gbv.USBCamera(CAMERA_PORT, data=data)
+        front_camera = gbv.USBCamera(front_camera_port, data=data)
+        front_camera.read()
 
-    # Initialize camera settings
-    camera.set_auto_exposure(False)
-    # camera.rescale(0.5)  # Makes camera frame smaller, if it's being slow or something
-    logger.info('initialized camera')
+    # Initialize front_camera settings
+    front_camera.set_auto_exposure(False)
+    # front_camera.rescale(0.5)  # Makes front_camera frame smaller, if it's being slow or something
+    logger.info('initialized front_camera')
 
     # Get the algorithms
     all_algos = BaseAlgorithm.get_algorithms()
@@ -89,7 +95,7 @@ def main():
 
     logger.info('starting rpi...')
     while True:
-        ok, frame = camera.read()
+        ok, frame = front_camera.read()
         # if not is_on_rpi():
         #     algo_type = conn.get('algorithm')
         #     logger.info(f'algo recieved: {algo_type}')
@@ -106,10 +112,10 @@ def main():
                 logger.warning(f'Unknown algorithm type: {algo_type}')
             if algo_type != current_algo:
                 logger.debug(f'switched to algorithm: {algo_type}')
-                possible_algos[algo_type].reset(camera, led_ring)
+                possible_algos[algo_type].reset(front_camera, led_ring)
 
             algo = possible_algos[algo_type]
-            algo(frame, camera)
+            algo(frame, front_camera)
 
             if not BaseAlgorithm.DEBUG and window and not is_on_rpi():
                 window.show_frame(frame)
