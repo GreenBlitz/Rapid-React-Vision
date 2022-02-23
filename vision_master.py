@@ -7,7 +7,6 @@ from typing import Dict
 
 from algorithms import BaseAlgorithm
 from constants import PITCH_ANGLE, YAW_ANGLE, ROLL_ANGLE, X_OFFSET, Y_OFFSET, Z_OFFSET
-from constants import TABLE_IP, TABLE_NAME, OUTPUT_KEY, SUCCESS_KEY
 from constants import TCP_STREAM_PORT, LED_RING_PORT
 from constants import generate_camera_ports
 from constants import DEV_PORT
