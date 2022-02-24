@@ -6,8 +6,8 @@ import gbvision as gbv
 from typing import Dict
 
 from algorithms import BaseAlgorithm
+from constants import get_stream_port, LED_RING_PORT
 from constants import PITCH_ANGLE, YAW_ANGLE, ROLL_ANGLE, X_OFFSET, Y_OFFSET, Z_OFFSET
-from constants import TCP_STREAM_PORT, LED_RING_PORT
 from constants import generate_camera_ports
 from constants import DEV_PORT
 from tools import is_on_rpi
@@ -32,7 +32,7 @@ class __EmptyLedRing:
 
 LedRing = gbrpi.LedRing if is_on_rpi() else __EmptyLedRing
 
-
+STREAM = True
 # noinspection PyMissingOrEmptyDocstring
 def main():
     # Init gb logger
@@ -57,22 +57,26 @@ def main():
         move_z(Z_OFFSET)
 
     # Get the camera ports (mapped out by hardware ports)
-    camera = generate_camera_ports()["FRONT"]
+    camera_ports = generate_camera_ports()
+    front_camera_port = camera_ports["FRONT"]
     # Check my algorithm debug mode
-    if BaseAlgorithm.DEBUG:
+    if STREAM:
         logger.info('running on debug mode, waiting for a stream receiver to connect...')
-        front_camera = gbv.USBStreamCamera(gbv.TCPStreamBroadcaster(TCP_STREAM_PORT), camera, data=data)
+        front_camera = gbv.USBStreamCamera(gbv.TCPStreamBroadcaster(get_stream_port()), front_camera_port, data=data)
         logger.info('initialized stream')
         front_camera.toggle_stream(True)
     else:
         logger.info('running off debug mode...')
-        front_camera = gbv.USBCamera(camera, data=data)
+        front_camera = gbv.USBCamera(front_camera_port, data=data)
         front_camera.read()
 
     # Initialize front_camera settings
     front_camera.set_auto_exposure(False)
     # front_camera.rescale(0.5)  # Makes front_camera frame smaller, if it's being slow or something
     logger.info('initialized front_camera')
+
+    #initializing stream cameras
+    back_camera = gbv.USBStreamCamera(get_stream_port(), camera_ports["BACK"], data=data)
 
     # Get the algorithms
     all_algos = BaseAlgorithm.get_algorithms()
@@ -98,6 +102,9 @@ def main():
 
     logger.info('starting rpi...')
     while True:
+        #streaming non vision cameras
+        back_camera.read()
+
         ok, frame = front_camera.read()
         # if not is_on_rpi():
         #     algo_type = conn.get('algorithm')
