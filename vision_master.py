@@ -68,17 +68,18 @@ def main():
         # Open all cameras
         for cam_name in USB_TO_VIDEO:
             # Run camera
-            logger.info(f'starting camera #{cam_name}...')
-            camera = AbsoluteUSBCamera(cam_name, data=data)
-            # Check if successful
-            if camera.is_opened():
-                logger.info(f'camera #{cam_name} started!')
+            logger.info(f'starting camera "{cam_name}"...')
+            try:
+                # Try to open the camera
+                camera = AbsoluteUSBCamera(cam_name, data=data)
+                logger.info(f'camera "{cam_name}" started!')
                 camera.set_auto_exposure(False)
                 # camera.rescale(0.5)  # Makes front_camera frame smaller, if it's being slow or something
                 # Add to list
                 cameras.append(camera)
-            else:
-                logger.info(f'camera #{cam_name} failed... :(')
+            except FileNotFoundError:
+                # If the camera is not active
+                logger.info(f'camera "{cam_name}" failed... :(')
 
         logger.info('all active cameras on!')
     else:
