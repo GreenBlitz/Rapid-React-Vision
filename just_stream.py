@@ -2,7 +2,8 @@ from threading import Thread
 
 import cv2
 import gbvision as gbv
-from constants import get_stream_port
+
+from constants import TCP_STREAM_PORT
 from utils.absolute_usb_camera import AbsoluteUSBCamera
 
 
@@ -27,7 +28,7 @@ def stream(camera, stream):
 
 
 cameras = [AbsoluteUSBCamera("top left"), AbsoluteUSBCamera("bottom left")]
-tcp_streams = [gbv.TCPStreamBroadcaster(get_stream_port()), gbv.TCPStreamBroadcaster(get_stream_port())]
+tcp_streams = [gbv.TCPStreamBroadcaster(TCP_STREAM_PORT), gbv.TCPStreamBroadcaster(1)]
 while True:
     for i in range(len(cameras)):
         stream(cameras[i], tcp_streams[i])

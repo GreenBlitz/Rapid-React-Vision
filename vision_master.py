@@ -69,6 +69,7 @@ def main():
         for cam_name in USB_TO_VIDEO:
             # Run camera
             logger.info(f'starting camera "{cam_name}"...')
+            # noinspection PyBroadException
             try:
                 # Try to open the camera
                 camera = AbsoluteUSBCamera(cam_name, data=data)
@@ -77,11 +78,11 @@ def main():
                 # camera.rescale(0.5)  # Makes front_camera frame smaller, if it's being slow or something
                 # Add to list
                 cameras.append(camera)
-            except FileNotFoundError:
+            except:
                 # If the camera is not active
                 logger.info(f'camera "{cam_name}" failed... :(')
 
-        logger.info('all active cameras on!')
+        logger.info(f'all active cameras on ({len(cameras)} total)')
     else:
         logger.info('running off debug mode...')
         camera = gbv.USBCamera(conn.cam, data=data)
