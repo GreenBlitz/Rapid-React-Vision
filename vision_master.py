@@ -3,12 +3,13 @@ Vision master :)
 """
 import gbrpi
 import gbvision as gbv
+from time import sleep
 from typing import Dict, List, Union
 
 from algorithms import BaseAlgorithm
+from constants import DEV_PORT, TCP_STREAM_PORT, USB_TO_VIDEO
 from constants import LED_RING_PORT
 from constants import PITCH_ANGLE, YAW_ANGLE, ROLL_ANGLE, X_OFFSET, Y_OFFSET, Z_OFFSET
-from constants import DEV_PORT, TCP_STREAM_PORT, USB_TO_VIDEO
 from tools import is_on_rpi
 from utils import GBLogger
 from utils.absolute_usb_camera import AbsoluteUSBCamera
@@ -78,6 +79,12 @@ def main():
                 # camera.rescale(0.5)  # Makes front_camera frame smaller, if it's being slow or something
                 # Add to list
                 cameras.append(camera)
+
+                # DO NOT TOUCH THIS UNLESS YOU WANT TO SUFFER ETERNAL AGONY, at ur own risk - saji / asaf
+                # Free camera variable
+                del camera
+                # Sleep to prevent camera from boot locking CV2 threads
+                sleep(1.5)
             except:
                 # If the camera is not active
                 logger.info(f'camera "{cam_name}" failed... :(')
