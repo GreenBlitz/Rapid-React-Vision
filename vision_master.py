@@ -3,14 +3,15 @@ Vision master :)
 """
 import gbrpi
 import gbvision as gbv
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from algorithms import BaseAlgorithm
 from constants import LED_RING_PORT
 from constants import PITCH_ANGLE, YAW_ANGLE, ROLL_ANGLE, X_OFFSET, Y_OFFSET, Z_OFFSET
-from constants import DEV_PORT, TCP_STREAM_PORT
+from constants import DEV_PORT, TCP_STREAM_PORT, USB_TO_VIDEO
 from tools import is_on_rpi
 from utils import GBLogger
+from utils.absolute_usb_camera import AbsoluteUSBCamera
 
 LOGGER_NAME = 'vision_master'
 LOG_ALGORITHM_INCOMPLETE = False
@@ -58,26 +59,26 @@ def main():
         move_z(Z_OFFSET)
 
     # Check my algorithm debug mode
-    cameras: List[gbv.USBCamera] = []
+    cameras: List[Union[AbsoluteUSBCamera, gbv.USBCamera]] = []
     if STREAM:
         logger.info('running on debug mode, waiting for a stream receiver to connect...')
         tcp_stream_conn = gbv.TCPStreamBroadcaster(TCP_STREAM_PORT)
         logger.info('initialized stream')
         logger.info('running cameras...')
         # Open all cameras
-        for i in range(10):
+        for cam_name in USB_TO_VIDEO:
             # Run camera
-            logger.info(f'starting camera #{i}...')
-            camera = gbv.USBCamera(i, data=data)
+            logger.info(f'starting camera #{cam_name}...')
+            camera = AbsoluteUSBCamera(cam_name, data=data)
             # Check if successful
             if camera.is_opened():
-                logger.info(f'camera #{i} started!')
+                logger.info(f'camera #{cam_name} started!')
                 camera.set_auto_exposure(False)
                 # camera.rescale(0.5)  # Makes front_camera frame smaller, if it's being slow or something
                 # Add to list
                 cameras.append(camera)
             else:
-                logger.info(f'camera #{i} failed... :(')
+                logger.info(f'camera #{cam_name} failed... :(')
 
         logger.info('all active cameras on!')
     else:

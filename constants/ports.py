@@ -2,9 +2,8 @@
 all ports constants go in this file
 """
 
-DEV_CAMERA_PORT = 1
 LED_RING_PORT = 18
-#
+
 USB_TO_VIDEO = {
     "top right": 1,
     "top left": 3,
