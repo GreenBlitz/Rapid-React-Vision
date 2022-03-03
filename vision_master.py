@@ -32,6 +32,8 @@ class __EmptyLedRing:
 LedRing = gbrpi.LedRing if is_on_rpi() else __EmptyLedRing
 
 STREAM = True
+
+
 # noinspection PyMissingOrEmptyDocstring
 def main():
     # Init gb logger
@@ -69,7 +71,7 @@ def main():
             camera.set_auto_exposure(False)
             # camera.rescale(0.5)  # Makes front_camera frame smaller, if it's being slow or something
             # Add to list
-            cameras[i] = camera
+            cameras.append(camera)
 
         logger.info('cameras on!')
     else:
@@ -77,7 +79,7 @@ def main():
         camera = gbv.USBCamera(conn.cam, data=data)
         camera.read()
         # Put in list
-        cameras[0] = camera
+        cameras.append(camera)
 
     # Get the algorithms
     all_algos = BaseAlgorithm.get_algorithms()
