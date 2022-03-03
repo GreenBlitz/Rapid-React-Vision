@@ -1,9 +1,25 @@
+"""
+Just stream!
+"""
+
 import cv2
 import gbvision as gbv
 from constants import TCP_STREAM_PORT
+
+print("Starting camera...")
+
+# Start the camera
 front_camera = gbv.USBCamera(0)
+
+print("Camera started...")
+
+# Start the stream
 tcp_stream = gbv.TCPStreamBroadcaster(TCP_STREAM_PORT)
+
+print("Started streaming...")
+
 while True:
+    # Get the current frame
     ok, image = front_camera.read()
 
     # R
