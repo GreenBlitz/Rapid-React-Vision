@@ -3,13 +3,12 @@ Vision master :)
 """
 import gbrpi
 import gbvision as gbv
-from typing import Dict
+from typing import Dict, List
 
 from algorithms import BaseAlgorithm
-from constants import get_stream_port, LED_RING_PORT
+from constants import LED_RING_PORT
 from constants import PITCH_ANGLE, YAW_ANGLE, ROLL_ANGLE, X_OFFSET, Y_OFFSET, Z_OFFSET
-from constants import generate_camera_ports
-from constants import DEV_PORT
+from constants import DEV_PORT, TCP_STREAM_PORT
 from tools import is_on_rpi
 from utils import GBLogger
 
@@ -56,27 +55,29 @@ def main():
         move_y(Y_OFFSET). \
         move_z(Z_OFFSET)
 
-    # Get the camera ports (mapped out by hardware ports)
-    camera_ports = generate_camera_ports()
-    front_camera_port = camera_ports["FRONT"]
     # Check my algorithm debug mode
+    cameras: List[gbv.USBCamera] = []
     if STREAM:
         logger.info('running on debug mode, waiting for a stream receiver to connect...')
-        front_camera = gbv.USBStreamCamera(gbv.TCPStreamBroadcaster(get_stream_port()), front_camera_port, data=data)
+        tcp_stream_conn = gbv.TCPStreamBroadcaster(TCP_STREAM_PORT)
         logger.info('initialized stream')
-        front_camera.toggle_stream(True)
+        logger.info('running cameras...')
+        # Open all cameras
+        for i in range(8):
+            # Run camera
+            camera = gbv.USBCamera(i, data=data)
+            camera.set_auto_exposure(False)
+            # camera.rescale(0.5)  # Makes front_camera frame smaller, if it's being slow or something
+            # Add to list
+            cameras[i] = camera
+
+        logger.info('cameras on!')
     else:
         logger.info('running off debug mode...')
-        front_camera = gbv.USBCamera(front_camera_port, data=data)
-        front_camera.read()
-
-    # Initialize front_camera settings
-    front_camera.set_auto_exposure(False)
-    # front_camera.rescale(0.5)  # Makes front_camera frame smaller, if it's being slow or something
-    logger.info('initialized front_camera')
-
-    #initializing stream cameras
-    back_camera = gbv.USBStreamCamera(get_stream_port(), camera_ports["BACK"], data=data)
+        camera = gbv.USBCamera(conn.cam, data=data)
+        camera.read()
+        # Put in list
+        cameras[0] = camera
 
     # Get the algorithms
     all_algos = BaseAlgorithm.get_algorithms()
@@ -87,25 +88,22 @@ def main():
     current_algo = None
 
     # Debugging window
-    logger.info('starting debug window if enabled...')
-    window = False
-    thresh_window = False
-    if not BaseAlgorithm.DEBUG and not is_on_rpi():
-        # Window setup
-        window = gbv.FeedWindow('Vision')
-        # Run the window
-        window.open()
-        # Threshold window setup
-        thresh_window = gbv.FeedWindow('Threshold Vision')
-        # Run
-        thresh_window.open()
+    # logger.info('starting debug window if enabled...')
+    # window = False
+    # thresh_window = False
+    # if not BaseAlgorithm.DEBUG and not is_on_rpi():
+    #     # Window setup
+    #     window = gbv.FeedWindow('Vision')
+    #     # Run the window
+    #     window.open()
+    #     # Threshold window setup
+    #     thresh_window = gbv.FeedWindow('Threshold Vision')
+    #     # Run
+    #     thresh_window.open()
 
     logger.info('starting rpi...')
     while True:
-        #streaming non vision cameras
-        back_camera.read()
-
-        ok, frame = front_camera.read()
+        ok, frame = cameras[0].read()
         # if not is_on_rpi():
         #     algo_type = conn.get('algorithm')
         #     logger.info(f'algo recieved: {algo_type}')
@@ -122,24 +120,32 @@ def main():
                 logger.warning(f'Unknown algorithm type: {algo_type}')
             if algo_type != current_algo:
                 logger.debug(f'switched to algorithm: {algo_type}')
-                possible_algos[algo_type].reset(front_camera, led_ring)
+                possible_algos[algo_type].reset(cameras[0], led_ring)
 
             algo = possible_algos[algo_type]
-            algo(frame, front_camera)
+            algo(frame, cameras[0])
 
-            if not BaseAlgorithm.DEBUG and window and not is_on_rpi():
-                window.show_frame(frame)
-            if not BaseAlgorithm.DEBUG and thresh_window and not is_on_rpi():
-                # noinspection PyUnresolvedReferences
-                shapes = algo.finder.find_shapes(frame)
-                thresh_window.show_frame(
-                    gbv.draw_rotated_rects(
-                        frame=frame,
-                        rotated_rects=shapes,
-                        color=(255, 0, 0),
-                        thickness=1
-                    )
-                )
+            # Push to stream
+            if STREAM:
+                # Get current camera
+                ok, frame = cameras[conn.cam].read()
+                # Send to stream
+                # noinspection PyUnboundLocalVariable
+                tcp_stream_conn.send_frame(frame)
+
+            # if not BaseAlgorithm.DEBUG and window and not is_on_rpi():
+            #     window.show_frame(frame)
+            # if not BaseAlgorithm.DEBUG and thresh_window and not is_on_rpi():
+            #     # noinspection PyUnresolvedReferences
+            #     shapes = algo.finder.find_shapes(frame)
+            #     thresh_window.show_frame(
+            #         gbv.draw_rotated_rects(
+            #             frame=frame,
+            #             rotated_rects=shapes,
+            #             color=(255, 0, 0),
+            #             thickness=1
+            #         )
+            #     )
 
         current_algo = algo_type
 
