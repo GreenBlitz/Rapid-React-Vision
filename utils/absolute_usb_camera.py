@@ -1,6 +1,7 @@
 """
 Absolute camera.
 """
+import subprocess
 from subprocess import check_output
 
 from gbvision import UNKNOWN_CAMERA
@@ -19,6 +20,6 @@ class AbsoluteUSBCamera(gbv.USBCamera):
     """
 
     def __init__(self, absolute_port, data=UNKNOWN_CAMERA):
-        path = f"realpath /dev/v4l/by-path/platform-fd500000.pcie-pci-0000\\:01\\:00.0-usb-0\\:1.{ports.USB_TO_VIDEO[absolute_port]}\:1.0-video-index0"
-        video = check_output(path)
+        path = f"realpath /dev/v4l/by-path/platform-fd500000.pcie-pci-0000\\:01\\:00.0-usb-0\\:1.{ports.USB_TO_VIDEO[absolute_port]}\:1.0-video-index0 "
+        video = subprocess.check_output(path)[10:]
         super().__init__(video, data)
