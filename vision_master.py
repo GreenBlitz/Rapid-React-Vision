@@ -65,15 +65,21 @@ def main():
         logger.info('initialized stream')
         logger.info('running cameras...')
         # Open all cameras
-        for i in range(8):
+        for i in range(10):
             # Run camera
+            logger.info(f'starting camera #{i}...')
             camera = gbv.USBCamera(i, data=data)
-            camera.set_auto_exposure(False)
-            # camera.rescale(0.5)  # Makes front_camera frame smaller, if it's being slow or something
-            # Add to list
-            cameras.append(camera)
+            # Check if successful
+            if camera.is_opened():
+                logger.info(f'camera #{i} started!')
+                camera.set_auto_exposure(False)
+                # camera.rescale(0.5)  # Makes front_camera frame smaller, if it's being slow or something
+                # Add to list
+                cameras.append(camera)
+            else:
+                logger.info(f'camera #{i} failed... :(')
 
-        logger.info('cameras on!')
+        logger.info('all active cameras on!')
     else:
         logger.info('running off debug mode...')
         camera = gbv.USBCamera(conn.cam, data=data)
