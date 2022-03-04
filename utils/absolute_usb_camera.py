@@ -23,8 +23,8 @@ class AbsoluteUSBCamera(gbv.USBCamera):
     def __init__(self, absolute_port: str, data=UNKNOWN_CAMERA):
         # Format the command
         path = f"/dev/v4l/by-path/platform-fd500000.pcie-pci-0000:01:00.0-usb-0:1.{USB_TO_VIDEO[absolute_port]}:1.0-video-index0"
-        # Run the command
-        output = check_output("realpath " + path, shell=True).decode().strip()
+        # Run the command (timeout error raised if not found, usually just a bug and it does exist)
+        output = check_output("realpath " + path, shell=True, timeout=5).decode().strip()
         # If the video file was found
         if path == output:
             raise Exception(f"Camera stream {USB_TO_VIDEO[absolute_port]} not found.")

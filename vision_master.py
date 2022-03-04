@@ -75,7 +75,7 @@ def main():
                 # Try to open the camera
                 camera = AbsoluteUSBCamera(cam_name, data=data)
                 logger.info(f'camera "{cam_name}" started!')
-                camera.set_auto_exposure(False)
+                # camera.set_auto_exposure(False)
                 # camera.rescale(0.5)  # Makes front_camera frame smaller, if it's being slow or something
                 # Add to list
                 cameras.append(camera)
@@ -83,12 +83,14 @@ def main():
                 # DO NOT TOUCH THIS UNLESS YOU WANT TO SUFFER ETERNAL AGONY, at ur own risk - saji / asaf
                 # Free camera variable
                 del camera
-                # Sleep to prevent camera from boot locking CV2 threads
-                sleep(1.5)
             except:
                 # If the camera is not active
                 logger.info(f'camera "{cam_name}" failed... :(')
 
+            # Sleep to prevent camera from boot locking CV2 threads
+            sleep(3)
+
+        # Print all cams
         logger.info(f'all active cameras on ({len(cameras)} total)')
     else:
         logger.info('running off debug mode...')
