@@ -1,4 +1,3 @@
-
 from pupil_apriltags import Detector
 import cv2
 cam = cv2.VideoCapture(1)
