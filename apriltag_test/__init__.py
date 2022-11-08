@@ -15,6 +15,7 @@ img1 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 image = at_detector.detect(img1)
 corners = image[0].corners
 center = image[0].center
+tag_id = image[0].tag_id
 corner_01 = (int(corners[0][0]), int(corners[0][1]))
 corner_02 = (int(corners[1][0]), int(corners[1][1]))
 corner_03 = (int(corners[2][0]), int(corners[2][1]))
@@ -28,6 +29,7 @@ cv2.line(img, (corner_03[0], corner_03[1]),
 cv2.line(img, (corner_04[0], corner_04[1]),
                  (corner_01[0], corner_01[1]), (0, 255, 0), 2)
 print(image[0])
-cv2.putText(img, "balls", [corner_01[0]+50,corner_01[1]+50], FONT_HERSHEY_SIMPLEX,2,(255,0,0),4)
+
+cv2.putText(img,str(tag_id) , [corner_01[0]+50,corner_01[1]+50], FONT_HERSHEY_SIMPLEX,2,(255,0,0),4)
 cv2.imshow("img", img)
 cv2.waitKey(0)
